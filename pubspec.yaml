@@ -15,6 +15,7 @@ dependencies:
   http: ^0.12.2
   path_provider: ^1.6.28
   shared_preferences: ^0.5.12+4
+  permission_handler: ^5.1.0
   flutter:
     sdk: flutter
 

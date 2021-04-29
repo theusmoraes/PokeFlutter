@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:pokeflutter/Models/pokemon.dart';
 import 'package:pokeflutter/datasource/local/images.dart';
 import 'package:pokeflutter/datasource/local/pokemon_shared.dart';
@@ -54,19 +55,18 @@ class PokemonController extends GetxController {
     String base64ImageSprite =
         await _pokemonremote.networkImageToBase64(pokemon.sprite);
     if (base64ImageOfficial != null) {
-      print("Imagem official a caminho de ser salva");
       await ImageLocal()
           .saveImage(base64ImageOfficial, pokemon.id.toString(), false);
     }
     if (base64ImageSprite != null) {
-      print("Sprite a caminho de ser salva");
       await ImageLocal()
           .saveImage(base64ImageSprite, pokemon.id.toString(), true);
     }
   }
 
   Future<Uint8List> getImage(String pokemonId, isSprite) async {
-    print("entrei");
+    var status = await Permission.storage.status;
+
     String base64Image = await ImageLocal().readImage(pokemonId, isSprite);
     if (base64Image != null) {
       final decodedBytes = base64Decode(base64Image);
@@ -83,21 +83,19 @@ class PokemonController extends GetxController {
       //CASO ESTEJA ARMAZENADO NO SHARED
       await Future.forEach(result, (Pokemon element) async {
         official = await getImage(element.id.toString(), false);
+
         sprite = await getImage(element.id.toString(), true);
         if (official != null && sprite != null) {
           element.setOfflineImages(official, sprite);
           pokemons.add(element);
         }
       });
-      print("Entrei pelo shared");
     } else {
-      print("Entrei pelo http");
-
       // CASO NAO ESTEJA ARMAZENADO NO SHARED
       await Future.forEach((pokemonNames), (name) async {
         var pokemon = await _pokemonremote.getPokemon(name.toString());
         if (pokemon != null) {
-          saveImage(pokemon);
+          await saveImage(pokemon);
           official = await getImage(pokemon.id.toString(), false);
           sprite = await getImage(pokemon.id.toString(), true);
           if (official != null && sprite != null) {
@@ -105,9 +103,7 @@ class PokemonController extends GetxController {
           }
 
           pokemons.add(pokemon);
-        } else {
-          print("Pokemon $name não encontrado");
-        }
+        } else {}
       });
       pokemons.sort((a, b) => a.id.compareTo(b.id));
       _shared.savePokemons(pokemons);

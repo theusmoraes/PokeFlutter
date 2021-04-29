@@ -26,6 +26,8 @@ class ImageLocal {
       final file = await _localFile(pokemonId, pixelImage);
       String contents = await file.readAsString();
       return contents;
-    } catch (e) {}
+    } catch (e) {
+      print("Error $e");
+    }
   }
 }
